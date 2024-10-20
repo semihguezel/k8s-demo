@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment # Configuration for Deployment starts here
+metadata:
+  name: mongo-deployment
+  labels: # 
+    app: mongo
+spec:
+  replicas: 1 # How many Pods you want to create 
+  selector:
+    matchLabels: # It defines all the pods match this label belongs to this deployment
+      app: mongo
+  template: # Configuration for pods starts here
+    metadata:
+      labels: # for pods lables are required
+        app: mongo
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:5.0
+        ports:
+        - containerPort: 27017 # Mongo db listens port 27017 as denoted in it's documentation
+        env: # This is how we define env parameters for container.
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom: # This is how we refer fields from Secret configuration file
+            secretKeyRef:
+              name: mongo-secret
+              key: mongo-user
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom: # This is how we refer fields from Secret configuration file
+            secretKeyRef:
+              name: mongo-secret # Kubernetes will look for a secret named in this field
+              key: mango_password # If founds the secret file specified above, Kubernetes will look for a field specified in this field.
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-service # name of the sercive should match with what we defined in config.yaml file
+spec:
+  selector: # Service has not know which pods its forwards the requests to
+    app.kubernetes.io/name: mongo # This should match the name of the pods
+  ports:
+    - protocol: TCP
+      port: 27017 # Sets the port of the Service. It's common practice to set two ports the same to overcome conflicts.
+      targetPort: 27017 # Target port should match with containerPort of the Pod . It basically means which port to forward the requests to the Pods.

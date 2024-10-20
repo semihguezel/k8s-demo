@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment # Configuration for Deployment starts here
+metadata:
+  name: webapp-deployment
+  labels: # 
+    app: webapp
+spec:
+  replicas: 1 # How many Pods you want to create 
+  selector:
+    matchLabels: # It defines all the pods match this label belongs to this deployment
+      app: webapp
+  template: # Configuration for pods starts here
+    metadata:
+      labels: # for pods lables are required
+        app: webapp
+    spec:
+      containers:
+      - name: webapp
+        image: nanajanashia/k8s-demo-app:v1.0
+        ports:
+        - containerPort: 3000 # Nodejs listens port 3000 as denoted in it's documentation
+        env: # This is how we define env parameters for container.
+        - name: USER_NAME
+          valueFrom: # This is how we refer fields from Secret configuration file
+            secretKeyRef:
+              name: mongo-secret
+              key: mongo-user
+        - name: USER_PWD
+          valueFrom: # This is how we refer fields from Secret configuration file
+            secretKeyRef:
+              name: mongo-secret # Kubernetes will look for a secret named in this field
+              key: mango_password # If founds the secret file specified above, Kubernetes will look for a field specified in this field.
+        - name: DB_URL
+          valueFrom: # This is how we refer fields from ConfigMap Configuration file.
+            configMapKeyRef:
+              name: mongo-config
+              key: mongo-url
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-service # name of the sercive should match with what we defined in config.yaml file
+spec:
+  type: NodePort # For defualt its set to a ClusterIP which is an Internal Service. To make it internal we specify its type as NodePort
+  selector: # Service has not know which pods its forwards the requests to
+    app.kubernetes.io/name: webapp # This should match the name of the pods
+  ports:
+    - protocol: TCP
+      port: 3000 # Sets the port of the Service.  It's common practice to set two ports the same to overcome conflicts.
+      targetPort: 3000 # Target port should macth with containerPort of the Pod . It basically means which port to forward the requests to the Pods.
+      nodePort: 30100 # It has bot in the range of 30000 - 32767
