@@ -1,6 +1,6 @@
 # k8s-demo
 
-After editing K8s configuration files we need to add them to create K8s cluster. Import thing to
+After editing K8s configuration files we need to add them to create K8s cluster. Important thing to
 applying those configurations files is that first we need to apply configMap and secret files because our deployment and service configurations depending on them.
 $ kubectl apply -f <file-name.yaml>
 
